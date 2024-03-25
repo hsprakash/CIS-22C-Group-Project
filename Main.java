@@ -14,12 +14,16 @@ public class Main {
     private static HashTable<Employee> employeeTable = new HashTable<Employee>(10);
 
     // BSTs
-    private static BST<Game> gamesByTitle = new BST<Game>();
-    private static BST<Game> gamesByReleaseDate = new BST<Game>();
-    // private static BST<Game> gamesByPrice = new BST<Game>(); // UNCOMMENT WHEN IMPLEMENTED
+    private static BST<Game> allGamesByTitle = new BST<Game>();
+    private static BST<Game> allGamesByReleaseDate = new BST<Game>();
+    // private static BST<Game> allGamesByPrice = new BST<Game>(); // UNCOMMENT WHEN IMPLEMENTED
     private static TitleComparator titleCMP = new TitleComparator();
     private static ReleaseDateComparator releaseDateCMP = new ReleaseDateComparator();
     // PriceComparator priceCMP = new PriceComparator(); // UNCOMMENT WHEN IMPLEMENTED
+
+
+    // User information
+    private static String role = "Unknown";
 
     public static void main(String[] args) {
         createLoginTables();
@@ -33,6 +37,12 @@ public class Main {
         System.out.println("Welcome to the Video Games Store!");
         System.out.println("Please login to continue.");
         login();
+
+        if (role == "Customer") {
+            System.out.println("Welcome to the store!");
+        } else {
+            System.out.println("Welcome to the employee portal!");
+        }
     }
 
     public static void createLoginTables() {
@@ -119,15 +129,15 @@ public class Main {
                 // Insert and Reorder BSTs
                 BST<Game> temp;
 
-                gamesByTitle.insert(game, titleCMP);
-                temp = gamesByTitle;
-                gamesByTitle = new BST<>(temp, titleCMP);
+                allGamesByTitle.insert(game, titleCMP);
+                temp = allGamesByTitle;
+                allGamesByTitle = new BST<>(temp, titleCMP);
 
-                gamesByReleaseDate.insert(game, releaseDateCMP);
-                temp = gamesByReleaseDate;
-                gamesByReleaseDate = new BST<>(temp, releaseDateCMP);
+                allGamesByReleaseDate.insert(game, releaseDateCMP);
+                temp = allGamesByReleaseDate;
+                allGamesByReleaseDate = new BST<>(temp, releaseDateCMP);
 
-                // Add gamesByPrice when implemented
+                // Add allGamesByPrice when implemented
             }
             scanner.close();
         } catch (FileNotFoundException error) {
@@ -148,6 +158,8 @@ public class Main {
         if(isCustomer) {
             tempCustomer = customerTable.get(tempCustomer);
             System.out.println("Successfully logged in as " + tempCustomer.getFirstName() + " " + tempCustomer.getLastName());
+
+            role = "Customer";
         }
         else {
             Employee tempEmployee = new Employee("", "", username, password, false);
@@ -155,12 +167,30 @@ public class Main {
             if(isEmployee) {
                 tempEmployee = employeeTable.get(tempEmployee);
                 System.out.println("Successfully logged in as " + tempEmployee.getFirstName() + " " + tempEmployee.getLastName());
+
+                role = "Employee";
+
+                if(tempEmployee.isManager()) {
+                    role = "Manager";
+                }
             }
             else {
-                System.out.println("Login failed.");
+                System.out.println("Login failed. Please try again.");
+                login();
             }
         }
 
         myScanner.close();
+
+        
     }
+
+    public static void customerMenu() {
+        
+    }
+
+    public static void employeeMenu() {
+        
+    }
+
 }
