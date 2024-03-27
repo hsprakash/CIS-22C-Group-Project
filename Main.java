@@ -37,6 +37,10 @@ public class Main {
     private static Heap<Order> shippedOrders = new Heap<>(new ArrayList<>(), new PriorityComparator());
 
 
+    // New data (Users, Games, Orders)
+    private static Customer newCustomer;
+    private static LinkedList<Game> newGames = new LinkedList<Game>();
+
     /**
      * main method
      * 
@@ -96,7 +100,7 @@ public class Main {
     /**** Technical Setup ****/
 
     /**
-     * Reads the Users.txt file and creates the Customer and Employee objects
+     * Reads the users.txt file and creates the Customer and Employee objects
      * 
      * @author Abdullah Mohammad
      */
@@ -179,7 +183,9 @@ public class Main {
                 String stockString = scanner.nextLine();
                 int stock = Integer.parseInt(stockString);
 
-                scanner.nextLine(); // skip a line
+                if (scanner.hasNextLine()) {
+                    scanner.nextLine(); // skip a line
+                }
 
                 Game game = new Game(
                     title,
@@ -231,8 +237,8 @@ public class Main {
                 Customer cus = customerTable.get(new Customer("", "", username, password));
                 int numProducts = Integer.parseInt(scanner.nextLine());
                 LinkedList<Game> products = new LinkedList<>();
-                for(int i = 0; i < numProducts; i++)
-                {
+
+                for(int i = 0; i < numProducts; i++) {
                     String productTitle = scanner.nextLine();
                     Game tempGame = gamesByTitle.search(new Game(productTitle, ""), titleCMP);
                     products.addLast(tempGame);
@@ -242,6 +248,11 @@ public class Main {
                 int shippingSpeed = Integer.parseInt(scanner.nextLine());
 
                 Order newOrder = new Order(orderID, cus, datePlaced, products, shippingSpeed);
+
+                if (scanner.hasNextLine()) {
+                    scanner.nextLine(); // skip a line
+                }
+
                 cus.addUnshippedOrder(newOrder);
                 orderByID.insert(newOrder, new IDComparator());
                 orderByName.insert(newOrder, new NameComparator());
@@ -269,7 +280,7 @@ public class Main {
         System.out.println("2. Login to an existing account.");
         System.out.println("3. Continue as a Guest.");
         int choice = Integer.parseInt(myScanner.nextLine());
-//        System.out.println(); // newline
+        // System.out.println(); // newline 
 
         while(choice != 1 && choice != 2 && choice != 3) {
             System.out.println("Please try again.");
@@ -304,7 +315,7 @@ public class Main {
      * private helper method for loginAsCustomer()
      * Makes a new Customer account
      * Logs in as the new Customer
-     * Appends the Customer's information to Users.txt
+     * Appends the Customer's information to users.txt
      * 
      * @author Chahid Bagdouri
      * @return logged in Customer object
@@ -336,21 +347,8 @@ public class Main {
             System.out.println("Successfully created account for and logged in as " + tempCustomer.getFirstName() + " " + tempCustomer.getLastName() + ".");
         }
 
+        newCustomer = tempCustomer;
 
-        try {
-            FileWriter myWriter = new FileWriter("Users.txt", true);
-            myWriter.append("\n");
-            myWriter.append(tempCustomer.getName() + "\n");
-            myWriter.append(tempCustomer.getUsername() + "\n");
-            myWriter.append(tempCustomer.getPassword() + "\n");
-            myWriter.append("customer\n");
-
-            myWriter.close();
-        } catch (IOException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
-        }
-//        System.out.println(); // newline
         return tempCustomer;
     }
     
@@ -382,7 +380,7 @@ public class Main {
             System.out.println("Would you like to try again or make a new account?");
             System.out.println("Type '1' to try again or '2' for new account.");
             int choice = Integer.parseInt(myScanner.nextLine());
-//            System.out.println(); // newline
+            // System.out.println(); // newline
 
             while(choice != 1 && choice != 2) {
                 System.out.println("Please try again.");
@@ -705,11 +703,12 @@ public class Main {
         Employee tempEmployee = null;
         while(!isEmployee) {
             System.out.println("Please enter your username:");
-            String username = myScanner.nextLine();
+            String username = myScanner.next();
 //            System.out.println(); // newline
             System.out.println("Please enter your password:");
-            String password = myScanner.nextLine();
+            String password = myScanner.next();
 //            System.out.println(); // newline
+            myScanner.nextLine(); // clear the buffer
 
             tempEmployee = new Employee("", "", username, password, false);
             isEmployee = (employeeTable.find(tempEmployee) != -1);
@@ -932,10 +931,12 @@ public class Main {
         boolean isManager = false;
         Employee manager = null;
         while (!isManager) {
-            System.out.println("Please enter your username:");
-            String username = myScanner.nextLine();
-            System.out.println("Please enter your password:");
-            String password = myScanner.nextLine();
+            System.out.print("Please enter your username: ");
+            String username = myScanner.next();
+            System.out.print("Please enter your password: ");
+            String password = myScanner.next();
+            myScanner.nextLine(); // clear the buffer
+
             manager = new Employee("", "", username, password, true);
             isManager = employeeTable.find(manager) != -1 && manager.isManager();
             if (isManager) {
@@ -1002,7 +1003,8 @@ public class Main {
             System.out.println("2. Update Existing Product");
             System.out.println("3. Remove Product");
             System.out.println("-1. Back to Manager Options");
-            choice = Integer.parseInt(myScanner.nextLine());
+            choice = Integer.parseInt(myScanner.nextLine()); // TODO: There is java.util.NoSuchElementException: No line found
+
             switch (choice) {
                 case 1:
                     addNewProduct();
@@ -1038,7 +1040,7 @@ public class Main {
         System.out.print("Genre: ");
         String genre = myScanner.nextLine();
 
-        System.out.print("Release Date (MM/DD/YYYY): ");
+        System.out.print("Release Date (mm/dd/yyyy): ");
         String dateString = myScanner.nextLine();
         Date releaseDate = new Date(dateString); // Do we have a comparator for this?
 
@@ -1183,14 +1185,23 @@ public class Main {
     }
 
     /**
-     * Exits the program
+     * Exits the program and saves the data
      * 
+     * @author Abdullah Mohammad
      * @author Hari Prakash
      */
     private static void exitProgram() {
         System.out.println("Saving data...");
-        saveOrders();
-        saveGames();
+        if (newCustomer != null) {
+            saveNewUser(newCustomer);
+        }
+
+        saveNewGames();
+        saveUnshippedOrders();
+
+        // saveOrders();
+        // saveUsers();
+        // saveGames();
         
         System.out.println("Data saved. Exiting the program.");
         System.exit(0);
@@ -1198,17 +1209,27 @@ public class Main {
 
     /**
      * Saves the orders to orders.txt file
-     * 
+     
+     * @author Abdullah Mohammad
      * @author Hari Prakash
      */
-    private static void saveOrders() {
+    private static void saveUnshippedOrders() {
         try {
             FileWriter writer = new FileWriter("orders.txt");
-            for (Order order : unshippedOrders.sort()) {
-                writer.write(order.getOrderID() + "\n");
-                writer.write(order.getCustomer().getUsername() + "\n");
-                writer.write(order.getCustomer().getPassword() + "\n");
-                writer.write(order.getOrderContents().getLength() + "\n");
+            
+            // clear the file
+            writer.write("");
+
+            for (int i = 0; i < unshippedOrders.sort().size(); i++) {
+                Order order = unshippedOrders.sort().get(i);
+
+                if (i != 0) {
+                    writer.append("\n");
+                }
+                writer.append(order.getOrderID() + "\n");
+                writer.append(order.getCustomer().getUsername() + "\n");
+                writer.append(order.getCustomer().getPassword() + "\n");
+                writer.append(order.getOrderContents().getLength() + "\n");
     
                 order.getOrderContents().positionIterator();
                 while (!order.getOrderContents().offEnd()) {
@@ -1222,7 +1243,7 @@ public class Main {
             }
             writer.close();
         } catch (IOException e) {
-            System.out.println("saveOrders(): An error occurred.");
+            System.out.println("saveUnshippedOrders(): An error occurred.");
             e.printStackTrace();
         }
     }
@@ -1230,18 +1251,20 @@ public class Main {
     /**
      * Saves the users to users.txt file
      * 
+     * @author Abdullah Mohammad
      * @author Hari Prakash
      */
-    private static void addUser(Customer customer) {
+    private static void saveNewUser(Customer customer) {
         try {
-            FileWriter writer = new FileWriter("users.txt");
-            writer.write(customer.getName() + "\n");
-            writer.write(customer.getUsername() + "\n");
-            writer.write(customer.getPassword() + "\n");
-            writer.write("customer\n");
+            FileWriter writer = new FileWriter("users.txt", true);
+            writer.append("\n");
+            writer.append(customer.getName() + "\n");
+            writer.append(customer.getUsername() + "\n");
+            writer.append(customer.getPassword() + "\n");
+            writer.append("customer\n");
             writer.close();
         } catch (IOException e) {
-            System.out.println("saveUsers(): An error occurred.");
+            System.out.println("saveNewUser(): An error occurred.");
             e.printStackTrace();
         }
     }
@@ -1249,17 +1272,33 @@ public class Main {
     /**
      * Saves a game to database.txt file
      * 
+     * @author Abdullah Mohammad
      * @author Hari Prakash
      */
-    private static void saveGames() {
-        System.out.println();
-        System.out.println(gamesByTitle.inOrderString());
-        try{
+    private static void saveNewGames() {
+        try {
             FileWriter writer = new FileWriter("database.txt");
+
+
             writer.write(gamesByTitle.inOrderString());
+
+            // for (int i = 0; i < games.getLength(); i++) {
+            //     Game game = games.getIterator();
+            //     writer.write(game.getTitle() + "\n");
+            //     writer.write(game.getDeveloper() + "\n");
+            //     writer.write(game.getId() + "\n");
+            //     writer.write(game.getGenre() + "\n");
+            //     writer.write(game.getReleaseDate().toString() + "\n");
+            //     writer.write(game.getSummary() + "\n");
+            //     writer.write(game.getPlatforms().toString() + "\n");
+            //     writer.write("$" + game.getPrice() + "\n");
+            //     writer.write(game.getStock() + "\n");
+
+            //     games.advanceIterator();
+            // }
             writer.close();
         } catch (IOException e) {
-            System.out.println("saveGames(): An error occurred.");
+            System.out.println("saveNewGames(): An error occurred.");
             e.printStackTrace();
         }
     }
